@@ -147,7 +147,7 @@ Metadata:
           - InstanceType
           - InstanceNumber
           - KeyName
-          - IamInstanceProfileEmpty
+          - IamInstanceProfile
           - SSHLocation
       -
         Label:
@@ -189,7 +189,7 @@ Resources:
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MinSize: !Ref InstanceNumber
       MaxSize: !Ref InstanceNumber
-      HealthCheckType: ELB
+      HealthCheckType: EC2
       HealthCheckGracePeriod: 180
       # AutoScalingGroupName: ASG-ReplayHandler
       TargetGroupARNs:
@@ -204,7 +204,8 @@ Resources:
     Properties:
       LaunchTemplateName: LT-ReplayHandler
       LaunchTemplateData:
-        IamInstanceProfile: !If [IamInstanceProfileEmpty, !Ref 'AWS::NoValue', !Ref IamInstanceProfile]
+        IamInstanceProfile:
+          Arn: !If [IamInstanceProfileEmpty, !Ref 'AWS::NoValue', !Ref IamInstanceProfile]
         KeyName: !If [KeyNameEmpty, !Ref 'AWS::NoValue', !Ref KeyName]
         ImageId: !If [UseArm, !Ref LatestAmiIdArm, !Ref LatestAmiIdX86]
         SecurityGroupIds:
@@ -240,7 +241,7 @@ Resources:
               - 'Fn::Sub': |
                   sudo ip link add vxlan0 type vxlan id ${TrafficMirroringVNI} dev eth0 dstport 4789
                   sudo ip link set vxlan0 up
-                  $GOPATH"/bin/http-requests-mirroring" -outputFilePath /var/log/log_requests.csv -destination "${RequestsForwardDestination}" -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader}
+                  $GOPATH"/bin/http-requests-mirroring-aws" -outputFilePath /var/log/log_requests.csv -destination "${RequestsForwardDestination}" -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader}
   NetworkLoadBalancer:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
