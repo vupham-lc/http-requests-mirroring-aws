@@ -147,7 +147,7 @@ Metadata:
           - InstanceType
           - InstanceNumber
           - KeyName
-          - IamInstanceProfileEmpty
+          - IamInstanceProfile
           - SSHLocation
       -
         Label:
