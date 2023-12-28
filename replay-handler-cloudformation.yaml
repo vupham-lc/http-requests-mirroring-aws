@@ -189,7 +189,7 @@ Resources:
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MinSize: !Ref InstanceNumber
       MaxSize: !Ref InstanceNumber
-      HealthCheckType: ELB
+      HealthCheckType: EC2
       HealthCheckGracePeriod: 180
       # AutoScalingGroupName: ASG-ReplayHandler
       TargetGroupARNs:
