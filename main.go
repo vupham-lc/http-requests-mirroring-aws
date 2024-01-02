@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
 	"github.com/google/gopacket/layers"
@@ -193,25 +194,44 @@ func writeRequestToFile(req *http.Request, body []byte) {
 	defer file.Close()
 
 	// Write the request details to the file.
-	havingCognitosubHeader := false
-	cognitoSub := ""
-	requestId := ""
-	for header, values := range req.Header {
-		if header == "Requestid" {
-			requestId = strings.Join(values, " ")
-			continue
-		}
-		if header == "Cognitosub" {
-			cognitoSub = strings.Join(values, " ")
-			havingCognitosubHeader = true
-			continue
-		}
+	requestId := req.Header.Get("Requestid")
+	authorizationHeader := req.Header.Get("Authorization")
+
+	if authorizationHeader == "" {
+		log.Println("authorizationHeader is empty", authorizationHeader)
+		return
 	}
-	if !havingCognitosubHeader {
+
+	tokenString := strings.Replace(authorizationHeader, "Bearer ", "", 1)
+
+	// Parse the JWT token without validation
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	if err != nil {
+		log.Println("ParseUnverified is fail", err)
+		return
+	}
+
+	// Token is valid; you can access claims here
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		log.Println("Invalid token claims")
+		return
+	}
+	subClaim, exists := claims["sub"].(string)
+	if !exists {
+		log.Println("sub claim not found")
+		return
+	}
+
+	cognitoSub := subClaim
+
+	if cognitoSub == "" {
+		log.Println("cognitoSub is empty", cognitoSub)
 		return
 	}
 
 	logRequest := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, body)
+
 	_, err = fmt.Fprintf(file, "%s", logRequest)
 	if err != nil {
 		log.Println("Error writing logRequest to output file:", err)
