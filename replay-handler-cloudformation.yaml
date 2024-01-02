@@ -87,6 +87,7 @@ Parameters:
   TrafficMirroringVNI:
     Description: The VXLAN ID for traffic mirroring session.
     Type: Number
+    Default: 1234
     MinValue: 1
     MaxValue: 16777215
     ConstraintDescription: must be an integer between 1 and 16777215.
@@ -100,12 +101,6 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2'
     ConstraintDescription: 'only use /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2'
-  RequestsForwardDestination:
-    Description: >-
-      The destination endpoint of the replayed HTTP requests. The endpoint can be an IP address or a DNS name.
-      Enter the endpoint AND its protocol, like: http://172.0.0.1 or https://www.example.com.
-    Type: String
-    ConstraintDescription: 'Enter the endpoint AND its protocol, like: http://172.0.0.1 or https://www.example.com.'
   ForwardPercentage:
     Description: The percentage of traffic that gets replicated. Enter a number between 0 and 100.
     Type: Number
@@ -142,12 +137,11 @@ Metadata:
         Parameters:
           - HandlerVpcId
           - HandlerSubnetIds
-          - RequestsForwardDestination
           - TrafficMirroringVNI
           - InstanceType
           - InstanceNumber
-          - KeyName
           - IamInstanceProfile
+          - KeyName
           - SSHLocation
       -
         Label:
@@ -241,7 +235,7 @@ Resources:
               - 'Fn::Sub': |
                   sudo ip link add vxlan0 type vxlan id ${TrafficMirroringVNI} dev eth0 dstport 4789
                   sudo ip link set vxlan0 up
-                  $GOPATH"/bin/http-requests-mirroring-aws" -outputFilePath /var/log/log_requests.csv -destination "${RequestsForwardDestination}" -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader}
+                  $GOPATH"/bin/http-requests-mirroring-aws" -outputFilePath /var/log/log_requests.csv -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader} >> /var/log/http-requests-mirroring-aws.log 2>&1
   NetworkLoadBalancer:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
