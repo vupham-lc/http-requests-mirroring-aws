@@ -242,18 +242,18 @@ func writeRequestToFile(req *http.Request, body []byte) {
 		fmt.Println("Error marshaling JSON:", err)
 	}
 
-	var logRequestBody string
+	var requestLogBody string
 	if string(bodyMarshal) == "null" {
-		logRequestBody = ""
+		requestLogBody = ""
 	} else {
-		logRequestBody = string(bodyMarshal)
+		requestLogBody = string(bodyMarshal)
 	}
 
-	logRequest := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, logRequestBody)
+	requestLog := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, requestLogBody)
 
-	_, err = fmt.Fprintf(file, "%s", logRequest)
+	_, err = fmt.Fprintf(file, "%s", requestLog)
 	if err != nil {
-		log.Println("Error writing logRequest to output file:", err)
+		log.Println("Error writing requestLog to output file:", err)
 		return
 	}
 }
