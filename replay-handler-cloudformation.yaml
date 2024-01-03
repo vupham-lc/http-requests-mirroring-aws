@@ -198,6 +198,17 @@ Resources:
     Properties:
       LaunchTemplateName: LT-ReplayHandler
       LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 500
+              VolumeType: gp2
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: TestMirroringASG  # Change this to the desired instance name
+
         IamInstanceProfile:
           Arn: !If [IamInstanceProfileEmpty, !Ref 'AWS::NoValue', !Ref IamInstanceProfile]
         KeyName: !If [KeyNameEmpty, !Ref 'AWS::NoValue', !Ref KeyName]
@@ -235,7 +246,7 @@ Resources:
               - 'Fn::Sub': |
                   sudo ip link add vxlan0 type vxlan id ${TrafficMirroringVNI} dev eth0 dstport 4789
                   sudo ip link set vxlan0 up
-                  $GOPATH"/bin/http-requests-mirroring-aws" -outputFilePath /var/log/log_requests.csv -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader} >> /var/log/http-requests-mirroring-aws.log 2>&1
+                  $GOPATH"/bin/http-requests-mirroring-aws" -outputFilePath /var/log/request_logs.csv -percentage "${ForwardPercentage}" -percentage-by "${PercentageBy}" -percentage-by-header "${PercentageByHeader}" -filter-request-port "${FilterByDestinationPort}" ${KeepOriginalHostHeader} >> /var/log/http-requests-mirroring-aws.log 2>&1
   NetworkLoadBalancer:
     Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
     Properties:
