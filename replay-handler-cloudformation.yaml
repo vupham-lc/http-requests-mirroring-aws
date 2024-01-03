@@ -198,6 +198,17 @@ Resources:
     Properties:
       LaunchTemplateName: LT-ReplayHandler
       LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 500
+              VolumeType: gp2
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: TestMirroringASG  # Change this to the desired instance name
+
         IamInstanceProfile:
           Arn: !If [IamInstanceProfileEmpty, !Ref 'AWS::NoValue', !Ref IamInstanceProfile]
         KeyName: !If [KeyNameEmpty, !Ref 'AWS::NoValue', !Ref KeyName]
