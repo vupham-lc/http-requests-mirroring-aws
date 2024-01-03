@@ -14,6 +14,7 @@ import (
 	"bytes"
 	crypto_rand "crypto/rand"
 	"encoding/binary"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"hash/crc64"
@@ -224,13 +225,31 @@ func writeRequestToFile(req *http.Request, body []byte) {
 	}
 
 	cognitoSub := subClaim
-
 	if cognitoSub == "" {
 		log.Println("cognitoSub is empty", cognitoSub)
 		return
 	}
 
-	logRequest := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, body)
+	bodyString := string(body)
+	var bodyUnmarshal map[string]interface{}
+	err = json.Unmarshal([]byte(bodyString), &bodyUnmarshal)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err, bodyString)
+	}
+
+	bodyMarshal, err := json.Marshal(bodyUnmarshal)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+	}
+
+	var logRequestBody string
+	if string(bodyMarshal) == "null" {
+		logRequestBody = ""
+	} else {
+		logRequestBody = string(bodyMarshal)
+	}
+
+	logRequest := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, logRequestBody)
 
 	_, err = fmt.Fprintf(file, "%s", logRequest)
 	if err != nil {
