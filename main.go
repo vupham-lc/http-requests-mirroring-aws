@@ -14,7 +14,7 @@ import (
 	"bytes"
 	crypto_rand "crypto/rand"
 	"encoding/binary"
-	"encoding/json"
+	// "encoding/json"
 	"flag"
 	"fmt"
 	"hash/crc64"
@@ -27,6 +27,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"regexp"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/gopacket"
@@ -230,26 +231,17 @@ func writeRequestToFile(req *http.Request, body []byte) {
 		return
 	}
 
+	currentTime := time.Now()
+	isoFormattedTime := currentTime.Format("2006-01-02T15:04:05.999999999Z")
+
+	emailPattern := `\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`
+	re := regexp.MustCompile(emailPattern)
 	bodyString := string(body)
-	var bodyUnmarshal map[string]interface{}
-	err = json.Unmarshal([]byte(bodyString), &bodyUnmarshal)
-	if err != nil {
-		fmt.Println("Error unmarshaling JSON:", err, bodyString)
-	}
+	bodyReplacedEmail := re.ReplaceAllString(bodyString, "verfiyApi@gmail.com")
+	lines := strings.Split(bodyReplacedEmail, "\n")
+	requestLogBody := strings.Join(lines, " ")
 
-	bodyMarshal, err := json.Marshal(bodyUnmarshal)
-	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
-	}
-
-	var requestLogBody string
-	if string(bodyMarshal) == "null" {
-		requestLogBody = ""
-	} else {
-		requestLogBody = string(bodyMarshal)
-	}
-
-	requestLog := fmt.Sprintf("\"%s\",\"%s %s\",\"%s\",\"%s\"\n", requestId, req.Method, req.RequestURI, cognitoSub, requestLogBody)
+	requestLog := fmt.Sprintf("\"%s\",\"%s\",\"%s\",\"%s %s\",\"%s\"\n", cognitoSub, isoFormattedTime, requestId, req.Method, req.RequestURI, requestLogBody)
 
 	_, err = fmt.Fprintf(file, "%s", requestLog)
 	if err != nil {
