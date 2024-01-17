@@ -91,6 +91,12 @@ Parameters:
     MinValue: 1
     MaxValue: 16777215
     ConstraintDescription: must be an integer between 1 and 16777215.
+  NetworkInterfaceId1:
+    Description: This parameter is required. The network interface id of to mirror.
+    Type: 'String'
+  NetworkInterfaceId2:
+    Description: This parameter is required. The network interface id of to mirror.
+    Type: 'String'
   LatestAmiIdX86:
     Description: DO NOT change this parameter. This refers to the latest Amazon Linux 2 AMI.
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
@@ -138,6 +144,8 @@ Metadata:
           - HandlerVpcId
           - HandlerSubnetIds
           - TrafficMirroringVNI
+          - NetworkInterfaceId1
+          - NetworkInterfaceId2
           - InstanceType
           - InstanceNumber
           - IamInstanceProfile
@@ -317,7 +325,28 @@ Resources:
       SourceCidrBlock: !Ref FilterBySourceCidrBlock
       TrafficDirection: ingress
       TrafficMirrorFilterId: !Ref TrafficMirrorFilter
-
+  TrafficMirrorSession1:
+    Type: 'AWS::EC2::TrafficMirrorSession'
+    Properties:
+      NetworkInterfaceId: !Ref NetworkInterfaceId1
+      TrafficMirrorTargetId: !Ref TrafficMirrorTarget
+      TrafficMirrorFilterId: !Ref TrafficMirrorFilter
+      SessionNumber: 10
+      VirtualNetworkId: !Ref TrafficMirroringVNI
+      Tags:
+        - Key: Name
+          Value: TestMirrorSession1
+  TrafficMirrorSession2:
+    Type: 'AWS::EC2::TrafficMirrorSession'
+    Properties:
+      NetworkInterfaceId: !Ref NetworkInterfaceId2
+      TrafficMirrorTargetId: !Ref TrafficMirrorTarget
+      TrafficMirrorFilterId: !Ref TrafficMirrorFilter
+      SessionNumber: 10
+      VirtualNetworkId: !Ref TrafficMirroringVNI
+      Tags:
+        - Key: Name
+          Value: TestMirrorSession2
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
